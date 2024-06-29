@@ -6,6 +6,9 @@ import com.auth.ecommerce.dao.OrderDetailDao;
 import com.auth.ecommerce.dao.ProductDao;
 import com.auth.ecommerce.dao.UserDao;
 import com.auth.ecommerce.entity.*;
+import com.razorpay.Order;
+import com.razorpay.RazorpayClient;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +19,10 @@ import java.util.List;
 public class OrderDetailService {
 
     private static final String ORDER_PLACED = "Placed";
+
+    private static final String KEY = "rzp_test_NXCcNpO28QJHkN";
+    private static final String KEY_SECRET = "gMLwfCtLKsPxjJPHjxJeVlpp";
+    private static final String CURRENCY = "INR";
 
     @Autowired
     private OrderDetailDao orderDetailDao;
@@ -62,30 +69,58 @@ public class OrderDetailService {
 
     public void placeOrder(OrderInput orderInput, boolean isSingleProductCheckout){
         List<OrderProductQuantity> productQuantityList = orderInput.getOrderProductQuantityList();
+        String currentUser = JwtRequestFilter.CURRENT_USER;
+        User user = userDao.findById(currentUser).orElseThrow(() -> new RuntimeException("User not found"));
 
-        for(OrderProductQuantity o: productQuantityList){
-            Product product = productDao.findById(o.getProductId()).get();
-            String currentUser = JwtRequestFilter.CURRENT_USER;
-            User user = userDao.findById(currentUser).get();
-
+        for (OrderProductQuantity o : productQuantityList){
+            Product product = productDao.findById(o.getProductId()).orElseThrow(() -> new RuntimeException("Product not found"));
             OrderDetail orderDetail = new OrderDetail(
-                orderInput.getFullName(),
-                orderInput.getFullAddress(),
-                orderInput.getContactNumber(),
-                orderInput.getAlternateContactNumber(),
-                ORDER_PLACED,
-                product.getProductDiscountedPrice() * o.getQuantity(),
-                product,
-                user
+                    orderInput.getFullName(),
+                    orderInput.getFullAddress(),
+                    orderInput.getContactNumber(),
+                    orderInput.getAlternateContactNumber(),
+                    ORDER_PLACED,
+                    product.getProductDiscountedPrice() * o.getQuantity(),
+                    product,
+                    user,
+                    orderInput.getTransactionId()
             );
             orderDetailDao.save(orderDetail);
-
-            if(!isSingleProductCheckout){
-                List<Cart> carts = cartDao.findByUser(user);
-                carts.stream()
-                        .filter(cart -> cart.getProduct().getProductId() == (o.getProductId()))
-                        .forEach(cart -> cartDao.deleteById(cart.getCartId()));
-            }
         }
+        // Empty the cart if not a single product checkout
+        if (!isSingleProductCheckout){
+            List<Cart> carts = cartDao.findByUser(user);
+            carts.forEach(cart -> cartDao.deleteById(cart.getCartId()));
+        }
+    }
+
+    public TransactionDetails createTransaction(Double amount){
+        //amount
+        //currency
+        //key
+        //secret key
+        //These are required to create razorpay payment gateway
+        //Razorpay considers smallest unit of a currency that's why we need to multiply with 100
+        try {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("amount", (amount * 100));
+            jsonObject.put("currency", CURRENCY);
+
+            RazorpayClient razorpayClient = new RazorpayClient(KEY, KEY_SECRET);
+            Order order =  razorpayClient.orders.create(jsonObject);
+            return prepareTransactionDetails(order);
+        }catch (Exception e){
+            System.out.printf(e.getMessage());
+        }
+        return null;
+    }
+
+    public TransactionDetails prepareTransactionDetails(Order order){
+        String orderId = order.get("id");
+        String currency = order.get("currency");
+        Integer amount = order.get("amount");
+
+        TransactionDetails transactionDetails = new TransactionDetails(orderId, currency, amount, KEY);
+        return transactionDetails;
     }
 }
