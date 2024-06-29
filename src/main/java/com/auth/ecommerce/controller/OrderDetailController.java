@@ -1,13 +1,13 @@
 package com.auth.ecommerce.controller;
 
+import com.auth.ecommerce.entity.OrderDetail;
 import com.auth.ecommerce.entity.OrderInput;
 import com.auth.ecommerce.service.OrderDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 public class OrderDetailController {
@@ -22,4 +22,23 @@ public class OrderDetailController {
         orderDetailService.placeOrder(orderInput, isSingleProductCheckout);
 
     }
+
+    @PreAuthorize("hasRole('User')")
+    @GetMapping({"/getOrderDetails"})
+    public List<OrderDetail> getOrderDetails(){
+        return orderDetailService.getOrderDetails();
+    }
+
+    @PreAuthorize("hasRole('Vendor')")
+    @GetMapping({"/getAllOrderDetails/{status}"})
+    public List<OrderDetail> getAllOrderDetails(@PathVariable(name = "status") String status){
+        return orderDetailService.getAllOrderDetails(status);
+    }
+
+    @PreAuthorize("hasRole('Vendor')")
+    @GetMapping({"/markOrderAsDelivered/{orderId}"})
+    public void markOrderAsDelivered(@PathVariable(name = "orderId") Integer orderId) {
+        orderDetailService.markOrderAsDelivered(orderId);
+    }
+
 }

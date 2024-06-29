@@ -20,6 +20,8 @@ public class OrderDetail {
     @ManyToOne(cascade = CascadeType.ALL)
     private User user;
 
+    public OrderDetail(){}
+
 
     public OrderDetail(String orderFullName, String orderFullOrder, String orderContactNumber, String orderAlternateNumber, String orderStatus, Double orderAmount, Product product, User user) {
         this.orderFullName = orderFullName;

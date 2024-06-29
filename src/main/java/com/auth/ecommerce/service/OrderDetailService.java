@@ -9,6 +9,7 @@ import com.auth.ecommerce.entity.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -27,6 +28,37 @@ public class OrderDetailService {
 
     @Autowired
     private CartDao cartDao;
+
+    public List<OrderDetail> getOrderDetails(){
+        String currentUser = JwtRequestFilter.CURRENT_USER;
+        User user = userDao.findById(currentUser).get();
+        return orderDetailDao.findByUser(user);
+    }
+
+    public List<OrderDetail> getAllOrderDetails(String status){
+        List<OrderDetail> orderDetails = new ArrayList<>();
+
+        if(status.equals("all")){
+            orderDetailDao.findAll().forEach(
+                    x -> orderDetails.add(x)
+            );
+        }
+        else {
+            orderDetailDao.findByOrderStatus(status).forEach(
+                    x -> orderDetails.add(x)
+            );
+        }
+        return orderDetails;
+    }
+
+    public void markOrderAsDelivered(Integer orderId) {
+        OrderDetail orderDetail = orderDetailDao.findById(orderId).get();
+
+        if(orderDetail != null) {
+            orderDetail.setOrderStatus("Delivered");
+            orderDetailDao.save(orderDetail);
+        }
+    }
 
     public void placeOrder(OrderInput orderInput, boolean isSingleProductCheckout){
         List<OrderProductQuantity> productQuantityList = orderInput.getOrderProductQuantityList();
