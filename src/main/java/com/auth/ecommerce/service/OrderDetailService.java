@@ -95,12 +95,6 @@ public class OrderDetailService {
     }
 
     public TransactionDetails createTransaction(Double amount){
-        //amount
-        //currency
-        //key
-        //secret key
-        //These are required to create razorpay payment gateway
-        //Razorpay considers smallest unit of a currency that's why we need to multiply with 100
         try {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("amount", (amount * 100));

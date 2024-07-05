@@ -32,17 +32,28 @@ public class ProductService {
         return productDao.save(product);
     }
 
-    public List<Product> getAllProducts(int pageNumber, String searchKey){
-        Pageable pageable = PageRequest.of(pageNumber,12);
-        if(searchKey.equals("")){
-            return (List<Product>) productDao.findAll(pageable);
-        }else {
-            return (List<Product>) productDao.findByProductNameContainingIgnoreCaseOrProductDescriptionContainingIgnoreCase(
-                    searchKey, searchKey, pageable
-            );
-
+    public List<Product> getAllProducts(int pageNumber, String searchKey, String filter) {
+        Pageable pageable = PageRequest.of(pageNumber, 12);
+        if (searchKey.equals("")) {
+            if (filter.equals("lowToHigh")) {
+                return productDao.findAllByOrderByProductDiscountedPriceAsc(pageable);
+            } else if (filter.equals("highToLow")) {
+                return productDao.findAllByOrderByProductDiscountedPriceDesc(pageable);
+            } else {
+                return productDao.findAll(pageable);
+            }
+        } else {
+            if (filter.equals("lowToHigh")) {
+                return productDao.findByProductNameContainingIgnoreCaseOrProductDescriptionContainingIgnoreCaseOrderByProductDiscountedPriceAsc(
+                        searchKey, searchKey, pageable);
+            } else if (filter.equals("highToLow")) {
+                return productDao.findByProductNameContainingIgnoreCaseOrProductDescriptionContainingIgnoreCaseOrderByProductDiscountedPriceDesc(
+                        searchKey, searchKey, pageable);
+            } else {
+                return productDao.findByProductNameContainingIgnoreCaseOrProductDescriptionContainingIgnoreCase(
+                        searchKey, searchKey, pageable);
+            }
         }
-
     }
 
     public Product getProductDetailsById(Integer productId){
