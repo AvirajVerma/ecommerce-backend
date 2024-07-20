@@ -1,15 +1,13 @@
 package com.auth.ecommerce.controller;
 
-
 import com.auth.ecommerce.entity.User;
 import com.auth.ecommerce.service.UserService;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 @RestController
 public class UserController {
@@ -46,4 +44,16 @@ public class UserController {
     @GetMapping({"/forVendor"})
     @PreAuthorize("hasRole('Vendor')")
     public String forVendor(){return "this url is only accessible to vendor"; }
+
+    @GetMapping({"/getUserDetailsByUserName"})
+    public User getUserDetailsByUserName(){
+        return userService.getUserDetailsByUserName();
+    }
+
+    @PutMapping("/{userName}/password")
+    public ResponseEntity<?> updateUserPassword(@PathVariable String userName, @RequestBody Map<String, String> passwordRequest) {
+        String newPassword = passwordRequest.get("newPassword");
+        userService.updateUserPassword(userName, newPassword);
+        return ResponseEntity.ok().build();
+    }
 }

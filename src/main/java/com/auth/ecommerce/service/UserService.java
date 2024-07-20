@@ -1,6 +1,7 @@
 package com.auth.ecommerce.service;
 
 
+import com.auth.ecommerce.configuration.JwtRequestFilter;
 import com.auth.ecommerce.dao.RoleDao;
 import com.auth.ecommerce.dao.UserDao;
 import com.auth.ecommerce.entity.Role;
@@ -24,7 +25,7 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public User registerNewUser(User user){
+    public User registerNewUser(User user) {
         Role role = roleDao.findById("User").get();
         Set<Role> roles = new HashSet<>();
         roles.add(role);
@@ -35,7 +36,7 @@ public class UserService {
     }
 
     //newly added
-    public User registerNewVendor(User vendor){
+    public User registerNewVendor(User vendor) {
         Role role = roleDao.findById("Vendor").get();
         Set<Role> roles = new HashSet<>();
         roles.add(role);
@@ -45,7 +46,7 @@ public class UserService {
         return userDao.save(vendor);
     }
 
-    public void initRolesAndUser(){
+    public void initRolesAndUser() {
         Role adminRole = new Role();
         adminRole.setRoleName("Admin");
         adminRole.setRoleDescription("Admin Role");
@@ -84,7 +85,18 @@ public class UserService {
 //        userDao.save(user);
     }
 
-    public String getEncodedPassword(String password){
+    public String getEncodedPassword(String password) {
         return passwordEncoder.encode(password);
+    }
+
+    public User getUserDetailsByUserName() {
+        String username = JwtRequestFilter.CURRENT_USER;
+        return userDao.findById(username).get();
+    }
+
+    public void updateUserPassword(String userName, String newPassword) {
+        User user = userDao.findById(userName).orElseThrow(() -> new RuntimeException("User not found"));
+        user.setUserPassword(passwordEncoder.encode(newPassword));
+        userDao.save(user);
     }
 }
