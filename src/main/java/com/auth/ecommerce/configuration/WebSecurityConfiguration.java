@@ -44,7 +44,7 @@ public class WebSecurityConfiguration {
                 .cors(withDefaults()) // Use default CORS configuration
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/authenticate", "/registerNewUser", "/registerNewVendor", "/getAllProducts", "/getProductDetailsById/{productId}").permitAll() // Adjust these paths as needed
+                        .requestMatchers("/authenticate", "/registerNewUser", "/registerNewVendor", "/getAllProducts", "/getProductDetailsById/{productId}", "/newContactUs").permitAll() // Adjust these paths as needed
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptionHandling -> exceptionHandling
